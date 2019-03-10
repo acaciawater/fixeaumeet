@@ -1,0 +1,6 @@
+@charset "UTF-8";
+.label {
+	position: absolute;
+	padding: 2px;
+	background: #ffff99;
+}

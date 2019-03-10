@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block script %}
+<script src="https://code.highcharts.com/highcharts.js"></script>
+<script>
+
+$(function() {
+	const id = {{series}};
+	api.token = sessionStorage.getItem("token");
+	// first get information on series
+	api.getSeriesObject(id).then(series => {
+		// set caption of list to series name
+		$(".name").html(series.name);
+		
+		// create and show chart
+        let chart = Highcharts.chart("chart", {
+        	title: {text:series.name},
+        	xAxis: {type: "datetime"},
+        	yAxis: [{
+    			id: 1, 
+    			title: {text: series.unit}
+        	}]
+        });
+
+		// add (empty) series to chart
+		let chartSeries = chart.addSeries({
+			id: 1,
+			name: series.parameter,
+			yAxis: 1, 
+		});
+
+		// get data and show graph
+		let items = 0;
+		chart.showLoading("Gegevens ophalen...");
+		api.getSeriesData(id, {onPage: page => {
+			items += page.length;
+			// update number of items loaded on every page
+			$(".badge").html(`${items}`);
+		}})
+		.then(data => {
+			// loading completed
+			$(".badge").html(`${items}`);
+			// parse datetime into timestamp and set chartSeries' data
+			chartSeries.setData(data.map(p => {return [Date.parse(p.time), p.value]}));
+			chart.hideLoading();
+		})
+		.catch(error => {
+			chart.hideLoading();
+		});
+	})
+	.catch(error => {
+		console.error(error.responseText);
+	});
+});
+</script>
+{% endblock %}
+{% block content %}
+<div class="container-fluid h-100">
+	<div class="row h-100">
+		<div class="col-9">
+			<div id="chart" class="h-50">
+				<div class="status"></div>
+				<div class="error"></div>
+				<div class="results"></div>
+			</div>
+		</div>
+		<div class="col-3">
+			<ul id="list" class="list-group">
+				<li class="list-group-item active">
+					<i class="fas fa-chart-line pr-3"></i>
+					<span class="name"></span>
+					<span class="badge badge-light float-right" title='Aantal metingen'>0</span>
+				</li>
+			</ul>
+		</div>
+	</div>
+</div>
+
+{% endblock content %}
