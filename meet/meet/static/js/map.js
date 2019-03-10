@@ -27,7 +27,7 @@ function restoreMap(map) {
 	var items = storage.getItem('overlays');
 	if (items) {
 		overlays = new Set(JSON.parse(items));
-		overlays.forEach(function(item) {
+		overlays.forEach(item => {
 			overlayMaps[item].addTo(map);
 			succes = true;
 		});
@@ -67,35 +67,6 @@ var redBullet = L.icon({
 
 var theMap = null;
 var markers = []; // Should be associative array: {} ??
-
-/*function addMarkers(map,zoom) {
-	$.getJSON('/locs', function(data) {
-		bounds = new L.LatLngBounds();
-		$.each(data, function(key,val) {
-			marker = L.marker([val.lat, val.lon],{title:val.name, icon: redBullet});
-			markers[val.id] = marker;
-			marker.bindPopup("Loading...",{maxWidth: "auto"});
-			marker.bindTooltip(val.name,{permanent:true,className:"label",opacity:0.7,direction:"top",offset:[0,-10]});
-			marker.on("click", function(e) {
-				var popup = e.target.getPopup();
-			    $.get("/pop/"+val.id)
-				    .done(function(data) {
-				        popup.setContent(data);
-				        popup.update();
-				    })
-				    .fail(function() {
-				    	popup.closePopup();
-				    });
-			});
-			marker.addTo(map);
-			bounds.extend(marker.getLatLng());
-		});
-		if (zoom) { 
-			map.fitBounds(bounds);
-		}
-	});
-}
-*/
 
 function addMarker(map, item) {
 	const coords = item.location.coordinates;
@@ -161,14 +132,14 @@ function hideMarker() {
 }
 
 L.Control.LabelControl = L.Control.extend({
-    onAdd: function(map) {
+    onAdd: map => {
     	var container = L.DomUtil.create('div','leaflet-bar leaflet-control leaflet-control-custom');
         var img = L.DomUtil.create('a','fas fa-tag',container);
     	img.title = 'Toggle labels';
         img.setAttribute('role','button');
         img.setAttribute('aria-label','Toggle Labels');
 
-    	L.DomEvent.on(container, 'click', function(e) {
+    	L.DomEvent.on(container, 'click', e => {
         	toggleLabels();
             L.DomEvent.preventDefault();
             L.DomEvent.stopPropagation();
@@ -177,7 +148,7 @@ L.Control.LabelControl = L.Control.extend({
         return container;
     },
 
-    onRemove: function(map) {
+    onRemove: map => {
         // Nothing to do here
     },
     
@@ -192,7 +163,7 @@ var labelsShown = false;
 function showLabels() {
 	if (!labelsShown) {
 		if (markers) {
-			markers.forEach(function(marker){
+			markers.forEach(marker => {
 				marker.openTooltip();
 			});
 		} 
@@ -203,7 +174,7 @@ function showLabels() {
 function hideLabels() {
 	if (labelsShown) {
 		if (markers) {
-			markers.forEach(function(marker){
+			markers.forEach(marker => {
 				marker.closeTooltip();
 			}); 
 		} 
@@ -232,14 +203,6 @@ function initMap(div,options) {
  		attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
 	});
 	
-/*	var roads = L.gridLayer.googleMutant({
-	    type: 'roadmap' // valid values are 'roadmap', 'satellite', 'terrain' and 'hybrid'
-	});
-
-	var satellite = L.gridLayer.googleMutant({
-	    type: 'satellite' // valid values are 'roadmap', 'satellite', 'terrain' and 'hybrid'
-	});
-*/	
 	var topo = L.tileLayer('http://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', {
 		attribution: 'Tiles &copy; Esri'
 	});
@@ -251,8 +214,8 @@ function initMap(div,options) {
 	var ahn35 = L.esri.imageMapLayer({
 		url: 'https://ahn.arcgisonline.nl/arcgis/rest/services/Hoogtebestand/AHN3_5m/ImageServer',
 		opacity: 0.5})
-		.bindPopup(function(err, results, response){
-			var value = results.pixel.properties.value;
+		.bindPopup((err, results, response) => {
+			const value = results.pixel.properties.value;
 			return (value) ? 'Maaiveldhoogte: ' + value : false;
 		});
 
@@ -275,22 +238,15 @@ function initMap(div,options) {
 		osm.addTo(map);
 	}
 	
-	if(restoreBounds(map)) {
-		// add markers, but don't change extent
-//		addMarkers(map,false);
-	}
-	else {
-		// add markers and zoom to extent
-//		addMarkers(map,true);
-	}
-
+	restoreBounds(map);
+	
 	var control = L.control.labelcontrol({ position: 'topleft' }).addTo(map);
 
-	map.on('baselayerchange',function(e){changeBaseLayer(e);});
- 	map.on('overlayadd',function(e){addOverlay(e);});
- 	map.on('overlayremove',function(e){removeOverlay(e);});
- 	map.on('zoomend',function(){saveBounds(map);});
- 	map.on('moveend',function(){saveBounds(map);});
+	map.on('baselayerchange',e => {changeBaseLayer(e);});
+ 	map.on('overlayadd',e => {addOverlay(e);});
+ 	map.on('overlayremove',e => {removeOverlay(e);});
+ 	map.on('zoomend',() => {saveBounds(map);});
+ 	map.on('moveend',() => {saveBounds(map);});
  	
  	return theMap = map;
 
